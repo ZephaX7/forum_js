@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"os/exec"
 )
 
 func main() {
@@ -9,6 +10,6 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "templates/index.html")
 	})
-	println("http://localhost:8080")
+	go exec.Command("cmd", "/c", "start", "http://localhost:8080").Run()
 	http.ListenAndServe(":8080", nil)
 }
