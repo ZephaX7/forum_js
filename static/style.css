@@ -1,11 +1,11 @@
- body {
+body {
       margin: 0;
       font-family: Arial, sans-serif;
       background-color: #f4f4f4;
       color: #333;
     }
 
-    header {
+header {
       background-color: black;
       color: white;
       padding: 15px 30px;
@@ -14,11 +14,11 @@
       align-items: center;
     }
 
-    header h1 {
+header h1 {
       margin: 0;
     }
 
-    .btn {
+.btn {
       padding: 10px 15px;
       border: none;
       cursor: pointer;
@@ -26,55 +26,54 @@
       margin-left: 10px;
     }
 
-    .btn-primary {
+.btn-primary {
       background-color: white;
       color: black;
     }
 
-    .btn-secondary {
+.btn-secondary {
       background-color: gray;
       color: white;
     }
 
-    .hero {
+.hero {
       text-align: center;
       padding: 80px 20px;
       background: linear-gradient(to right, #000, #444);
       color: white;
     }
 
-    .hero h2 {
+.hero h2 {
       font-size: 40px;
     }
 
-    .hero p {
+.hero p {
       font-size: 18px;
       margin: 20px 0;
     }
 
-    .features {
+.features {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 20px;
       padding: 40px;
     }
 
-    .card {
+.card {
       background-color: white;
       padding: 20px;
       border-radius: 15px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
 
-    .cta {
+.cta {
       text-align: center;
       padding: 50px;
     }
 
-    footer {
+footer {
       background-color: black;
       color: white;
       text-align: center;
       padding: 20px;
     }
-    
