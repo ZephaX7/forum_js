@@ -1,21 +1,34 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Connexion</title>
-  <link rel="stylesheet" href="/static/style.css">
+    <meta charset="UTF-8">
+    <title>Connexion</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
-<body>
+<body class="auth-page">
 
-<h1>Connexion</h1>
+    <div class="auth-box">
 
-<form>
-  <input type="email" placeholder="Email"><br><br>
+        <h1>Connexion</h1>
 
-  <input type="password" placeholder="Mot de passe"><br><br>
+        <form>
 
-  <button type="submit">Se connecter</button>
-</form>
+            <input type="email" placeholder="Email" required>
+
+            <input type="password" placeholder="Mot de passe" required>
+
+            <button type="submit">
+                Se connecter
+            </button>
+
+        </form>
+
+        <p>
+            Pas encore de compte ?
+            <a href="/register">Inscription</a>
+        </p>
+
+    </div>
 
 </body>
 </html>
