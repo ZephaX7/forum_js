@@ -10,7 +10,7 @@
 
 <header>
   <h1> BMW Community</h1>
-  <div class="header-actions">
+  <div class="header-actions" id="headerActions">
     <a href="/login">
       <button class="btn btn-secondary">Connexion</button>
     </a>
@@ -19,6 +19,27 @@
     </a>
   </div>
 </header>
+
+<script>
+  function updateHeader() {
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    const headerActions = document.getElementById('headerActions');
+    
+    if (user) {
+      headerActions.innerHTML = `
+        <span style="color: white; margin-right: 15px;">👤 ${user.username}</span>
+        <button class="btn btn-secondary" onclick="logout()">Déconnexion</button>
+      `;
+    }
+  }
+  
+  function logout() {
+    localStorage.removeItem('user');
+    window.location.href = '/';
+  }
+  
+  updateHeader();
+</script>
 
 <section class="hero">
   <h2>Rejoins la communauté BMW</h2>
