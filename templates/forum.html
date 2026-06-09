@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forum BMW Community</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header>
+    <h1>BMW Community</h1>
+    <div class="header-actions">
+        <span id="username-display" class="username"></span>
+        <button class="btn btn-secondary" id="logout-btn">Déconnexion</button>
+        <button class="btn btn-primary" id="login-btn"><a href="/login">Connexion</a></button>
+    </div>
+</header>
+
+<div class="container">
+    <div class="forum-header">
+        <h2>Centre de Discussion BMW</h2>
+        <p>Partagez vos passions, posez vos questions et connectez-vous avec d'autres passionnés de BMW</p>
+        <button class="btn btn-primary" id="new-discussion-btn">+ Créer une discussion</button>
+    </div>
+
+    <div class="categories">
+        <button class="category-btn active" onclick="filterByCategory('Tous')">Tous</button>
+        <button class="category-btn" onclick="filterByCategory('Mécanique')">Mécanique</button>
+        <button class="category-btn" onclick="filterByCategory('Tuning')">Tuning</button>
+        <button class="category-btn" onclick="filterByCategory('Galerie')">Galerie</button>
+        <button class="category-btn" onclick="filterByCategory('Événements')">Événements</button>
+    </div>
+
+    <div class="discussions-list" id="discussions-container">
+        <div class="loading">Chargement des discussions...</div>
+    </div>
+</div>
+
+<!-- Modal pour créer une discussion -->
+<div id="new-discussion-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Créer une nouvelle discussion</h3>
+            <span class="close" onclick="closeNewDiscussionModal()">&times;</span>
+        </div>
+        <form id="discussion-form">
+            <div class="form-group">
+                <label for="title">Titre</label>
+                <input type="text" id="title" name="title" required placeholder="Titrez votre discussion">
+            </div>
+            <div class="form-group">
+                <label for="category">Catégorie</label>
+                <select id="category" name="category" required>
+                    <option value="Général">Général</option>
+                    <option value="Mécanique">Mécanique</option>
+                    <option value="Tuning">Tuning</option>
+                    <option value="Galerie">Galerie</option>
+                    <option value="Événements">Événements</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="content">Contenu</label>
+                <textarea id="content" name="content" required placeholder="Décrivez votre sujet en détail..."></textarea>
+            </div>
+            <div class="modal-buttons">
+                <button type="submit" class="btn btn-primary">Publier</button>
+                <button type="button" class="btn btn-secondary" onclick="closeNewDiscussionModal()">Annuler</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal pour les détails de la discussion -->
+<div id="discussion-detail-modal" class="modal">
+    <div class="modal-content modal-large">
+        <div class="modal-header">
+            <h3 id="detail-title"></h3>
+            <span class="close" onclick="closeDiscussionDetailModal()">&times;</span>
+        </div>
+        <div id="discussion-detail-content"></div>
+        
+        <!-- Formulaire pour répondre -->
+        <div id="reply-form-container" class="reply-form-container">
+            <div class="reply-form">
+                <h4>Votre réponse</h4>
+                <form id="reply-form">
+                    <textarea id="reply-content" placeholder="Écrivez votre réponse..." required></textarea>
+                    <button type="submit" class="btn btn-primary">Répondre</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentUser = null;
+    let selectedCategory = 'Tous';
+
+    document.addEventListener('DOMContentLoaded', function() {
+        checkUserSession();
+        loadDiscussions();
+    });
+
+    function checkUserSession() {
+        const user = localStorage.getItem('user');
+        if (user) {
+            currentUser = JSON.parse(user);
+            document.getElementById('username-display').textContent = 'Bienvenue, ' + currentUser.username;
+            document.getElementById('logout-btn').style.display = 'inline-block';
+            document.getElementById('login-btn').style.display = 'none';
+            document.getElementById('new-discussion-btn').style.display = 'inline-block';
+        } else {
+            document.getElementById('logout-btn').style.display = 'none';
+            document.getElementById('login-btn').style.display = 'inline-block';
+            document.getElementById('new-discussion-btn').style.display = 'none';
+        }
+    }
+
+    function loadDiscussions() {
+        fetch('/api/discussions')
+            .then(response => response.json())
+            .then(discussions => {
+                if (!discussions) {
+                    document.getElementById('discussions-container').innerHTML = '<p class="no-discussions">Aucune discussion pour le moment. Soyez le premier à en créer une !</p>';
+                    return;
+                }
+                
+                const filtered = selectedCategory === 'Tous' ? discussions : discussions.filter(d => d.category === selectedCategory);
+                
+                if (filtered.length === 0) {
+                    document.getElementById('discussions-container').innerHTML = '<p class="no-discussions">Aucune discussion dans cette catégorie.</p>';
+                    return;
+                }
+
+                const html = filtered.map(d => `
+                    <div class="discussion-card" onclick="showDiscussionDetail(${d.id})">
+                        <div class="discussion-header">
+                            <h3>${escapeHtml(d.title)}</h3>
+                            <span class="category-badge">${escapeHtml(d.category)}</span>
+                        </div>
+                        <p class="discussion-preview">${escapeHtml(d.content.substring(0, 150))}...</p>
+                        <div class="discussion-meta">
+                            <span class="author">Par <strong>${escapeHtml(d.username)}</strong></span>
+                            <span class="replies">${d.replies} réponse${d.replies > 1 ? 's' : ''}</span>
+                            <span class="date">${formatDate(d.created_at)}</span>
+                        </div>
+                    </div>
+                `).join('');
+                
+                document.getElementById('discussions-container').innerHTML = html;
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                document.getElementById('discussions-container').innerHTML = '<p class="error">Erreur lors du chargement des discussions</p>';
+            });
+    }
+
+    function filterByCategory(category) {
+        selectedCategory = category;
+        document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+        loadDiscussions();
+    }
+
+    function showNewDiscussionModal() {
+        if (!currentUser) {
+            alert('Vous devez être connecté pour créer une discussion');
+            window.location.href = '/login';
+            return;
+        }
+        document.getElementById('new-discussion-modal').style.display = 'block';
+    }
+
+    function closeNewDiscussionModal() {
+        document.getElementById('new-discussion-modal').style.display = 'none';
+        document.getElementById('discussion-form').reset();
+    }
+
+    function showDiscussionDetail(discussionId) {
+        fetch(`/api/discussions/${discussionId}`)
+            .then(response => response.json())
+            .then(discussion => {
+                document.getElementById('detail-title').textContent = escapeHtml(discussion.title);
+                
+                let html = `
+                    <div class="discussion-detail">
+                        <div class="detail-header">
+                            <span class="category-badge">${escapeHtml(discussion.category)}</span>
+                            <span class="date">${formatDate(discussion.created_at)}</span>
+                        </div>
+                        <div class="detail-content">${escapeHtml(discussion.content)}</div>
+                        <div class="detail-author">Par <strong>${escapeHtml(discussion.username)}</strong></div>
+                    </div>
+                    <div class="replies-section">
+                        <h4>${discussion.replies} réponse${discussion.replies > 1 ? 's' : ''}</h4>
+                        <div id="replies-list"></div>
+                    </div>
+                `;
+                
+                document.getElementById('discussion-detail-content').innerHTML = html;
+                
+                fetch(`/api/replies?discussion_id=${discussionId}`)
+                    .then(response => response.json())
+                    .then(replies => {
+                        if (!replies) replies = [];
+                        const repliesHtml = replies.map(r => `
+                            <div class="reply">
+                                <div class="reply-header">
+                                    <strong>${escapeHtml(r.username)}</strong>
+                                    <span class="date">${formatDate(r.created_at)}</span>
+                                </div>
+                                <div class="reply-content">${escapeHtml(r.content)}</div>
+                            </div>
+                        `).join('');
+                        
+                        document.getElementById('replies-list').innerHTML = repliesHtml || '<p class="no-replies">Aucune réponse pour le moment.</p>';
+                    });
+
+                if (currentUser) {
+                    const replyContainer = document.getElementById('reply-form-container');
+                    replyContainer.style.display = 'block';
+                    document.getElementById('reply-form').onsubmit = function(e) {
+                        e.preventDefault();
+                        
+                        fetch('/api/replies', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({
+                                content: document.getElementById('reply-content').value,
+                                user_id: currentUser.id,
+                                discussion_id: discussionId
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(result => {
+                            if (result.success) {
+                                document.getElementById('reply-content').value = '';
+                                showDiscussionDetail(discussionId);
+                            }
+                        })
+                        .catch(error => console.error('Erreur:', error));
+                    };
+                } else {
+                    document.getElementById('reply-form-container').style.display = 'none';
+                }
+
+                document.getElementById('discussion-detail-modal').style.display = 'block';
+            })
+            .catch(error => console.error('Erreur:', error));
+    }
+
+    function closeDiscussionDetailModal() {
+        document.getElementById('discussion-detail-modal').style.display = 'none';
+    }
+
+    document.getElementById('new-discussion-btn').addEventListener('click', showNewDiscussionModal);
+
+    document.getElementById('logout-btn').addEventListener('click', function() {
+        localStorage.removeItem('user');
+        currentUser = null;
+        checkUserSession();
+        loadDiscussions();
+    });
+
+    document.getElementById('discussion-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const data = {
+            title: document.getElementById('title').value,
+            content: document.getElementById('content').value,
+            category: document.getElementById('category').value,
+            user_id: currentUser.id
+        };
+
+        fetch('/api/discussions', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                closeNewDiscussionModal();
+                loadDiscussions();
+                alert('Discussion créée avec succès !');
+            }
+        })
+        .catch(error => console.error('Erreur:', error));
+    });
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        if (date.toDateString() === today.toDateString()) {
+            return 'Aujourd\'hui à ' + date.toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'});
+        } else if (date.toDateString() === yesterday.toDateString()) {
+            return 'Hier à ' + date.toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'});
+        } else {
+            return date.toLocaleDateString('fr-FR');
+        }
+    }
+
+    window.onclick = function(event) {
+        let modal = document.getElementById('new-discussion-modal');
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+        modal = document.getElementById('discussion-detail-modal');
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    }
+</script>
+
+</body>
+</html>

@@ -2,22 +2,117 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Inscription</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inscription - BMW Community</title>
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
-<h1>Inscription</h1>
+<div class="auth-container">
+  <a href="/" class="back-link">← Retour à l'accueil</a>
+  <div class="auth-form">
+    <h1>Inscription</h1>
+    <form id="register-form">
+      <div class="form-group">
+        <label for="username">Nom d'utilisateur</label>
+        <input type="text" id="username" name="username" placeholder="Votre pseudonyme" required>
+        <div class="error-message" id="username-error"></div>
+      </div>
 
-<form>
-  <input type="text" placeholder="Nom"><br><br>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" placeholder="votre@email.com" required>
+        <div class="error-message" id="email-error"></div>
+      </div>
 
-  <input type="email" placeholder="Email"><br><br>
+      <div class="form-group">
+        <label for="password">Mot de passe</label>
+        <input type="password" id="password" name="password" placeholder="Au moins 6 caractères" required minlength="6">
+        <div class="error-message" id="password-error"></div>
+      </div>
 
-  <input type="password" placeholder="Mot de passe"><br><br>
+      <div class="form-group">
+        <label for="password-confirm">Confirmer le mot de passe</label>
+        <input type="password" id="password-confirm" name="password-confirm" placeholder="Confirmez votre mot de passe" required>
+        <div class="error-message" id="password-confirm-error"></div>
+      </div>
 
-  <button type="submit">Créer un compte</button>
-</form>
+      <div class="error-message" id="form-error"></div>
+      <div class="success-message" id="form-success"></div>
+
+      <button type="submit" class="submit-btn">Créer un compte</button>
+    </form>
+
+    <div class="auth-link">
+      Déjà inscrit? <a href="/login">Se connecter</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('register-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const username = document.getElementById('username').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const passwordConfirm = document.getElementById('password-confirm').value;
+
+    document.getElementById('form-error').style.display = 'none';
+    document.getElementById('form-success').style.display = 'none';
+    document.querySelectorAll('.error-message').forEach(el => el.style.display = 'none');
+
+    let hasError = false;
+
+    if (password !== passwordConfirm) {
+      document.getElementById('password-confirm-error').textContent = 'Les mots de passe ne correspondent pas';
+      document.getElementById('password-confirm-error').style.display = 'block';
+      hasError = true;
+    }
+
+    if (password.length < 6) {
+      document.getElementById('password-error').textContent = 'Le mot de passe doit contenir au moins 6 caractères';
+      document.getElementById('password-error').style.display = 'block';
+      hasError = true;
+    }
+
+    if (hasError) return;
+
+    fetch('/api/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        username: username,
+        email: email,
+        password: password
+      })
+    })
+    .then(response => {
+      if (!response.ok) {
+        return response.text().then(text => {
+          throw new Error(text);
+        });
+      }
+      return response.json();
+    })
+    .then(result => {
+      const successMsg = document.getElementById('form-success');
+      successMsg.textContent = 'Inscription réussie! Redirection...';
+      successMsg.style.display = 'block';
+
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 1500);
+    })
+    .catch(error => {
+      const errorMsg = document.getElementById('form-error');
+      errorMsg.textContent = error.message || 'Erreur lors de l\'inscription';
+      errorMsg.style.display = 'block';
+    });
+  });
+</script>
 
 </body>
 </html>

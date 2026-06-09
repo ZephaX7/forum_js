@@ -1,6 +1,37 @@
 package main
 
-import "net/http"
+import (
+	"encoding/json"
+	"net/http"
+	"strconv"
+)
+
+// Structures de données
+type User struct {
+	ID       int    `json:"id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+}
+
+type Discussion struct {
+	ID       int    `json:"id"`
+	Title    string `json:"title"`
+	Content  string `json:"content"`
+	UserID   int    `json:"user_id"`
+	Username string `json:"username"`
+	Category string `json:"category"`
+	Replies  int    `json:"replies"`
+	Created  string `json:"created_at"`
+}
+
+type Reply struct {
+	ID           int    `json:"id"`
+	Content      string `json:"content"`
+	UserID       int    `json:"user_id"`
+	Username     string `json:"username"`
+	DiscussionID int    `json:"discussion_id"`
+	Created      string `json:"created_at"`
+}
 
 func routes() {
 
@@ -22,4 +53,215 @@ func routes() {
 	http.HandleFunc("/forum", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "templates/forum.html")
 	})
+
+	http.HandleFunc("/api/discussions", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if r.Method == "GET" {
+			getDiscussions(w, r)
+		} else if r.Method == "POST" {
+			createDiscussion(w, r)
+		}
+	})
+
+	http.HandleFunc("/api/discussions/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if r.Method == "GET" {
+			getDiscussionDetail(w, r)
+		}
+	})
+
+	http.HandleFunc("/api/replies", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if r.Method == "GET" {
+			getReplies(w, r)
+		} else if r.Method == "POST" {
+			createReply(w, r)
+		}
+	})
+
+	http.HandleFunc("/api/register", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if r.Method == "POST" {
+			registerUser(w, r)
+		}
+	})
+
+	http.HandleFunc("/api/login", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if r.Method == "POST" {
+			loginUser(w, r)
+		}
+	})
+}
+
+func getDiscussions(w http.ResponseWriter, r *http.Request) {
+	rows, err := db.Query(`
+		SELECT d.id, d.title, d.content, d.user_id, u.username, d.category, 
+		       COUNT(r.id) as reply_count, d.created_at
+		FROM discussions d
+		LEFT JOIN users u ON d.user_id = u.id
+		LEFT JOIN replies r ON d.id = r.discussion_id
+		GROUP BY d.id
+		ORDER BY d.created_at DESC
+	`)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	discussions := []Discussion{}
+	for rows.Next() {
+		var d Discussion
+		err := rows.Scan(&d.ID, &d.Title, &d.Content, &d.UserID, &d.Username, &d.Category, &d.Replies, &d.Created)
+		if err != nil {
+			continue
+		}
+		discussions = append(discussions, d)
+	}
+
+	json.NewEncoder(w).Encode(discussions)
+}
+
+// Créer une discussion
+func createDiscussion(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Title    string `json:"title"`
+		Content  string `json:"content"`
+		UserID   int    `json:"user_id"`
+		Category string `json:"category"`
+	}
+
+	json.NewDecoder(r.Body).Decode(&req)
+
+	result, err := db.Exec(
+		"INSERT INTO discussions (title, content, user_id, category) VALUES (?, ?, ?, ?)",
+		req.Title, req.Content, req.UserID, req.Category)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	id, _ := result.LastInsertId()
+	json.NewEncoder(w).Encode(map[string]interface{}{"id": id, "success": true})
+}
+
+// Récupérer les détails d'une discussion
+func getDiscussionDetail(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Path[len("/api/discussions/"):]
+	discussionID, _ := strconv.Atoi(id)
+
+	var d Discussion
+	err := db.QueryRow(`
+		SELECT d.id, d.title, d.content, d.user_id, u.username, d.category, 
+		       COUNT(r.id) as reply_count, d.created_at
+		FROM discussions d
+		LEFT JOIN users u ON d.user_id = u.id
+		LEFT JOIN replies r ON d.id = r.discussion_id
+		WHERE d.id = ?
+		GROUP BY d.id
+	`, discussionID).Scan(&d.ID, &d.Title, &d.Content, &d.UserID, &d.Username, &d.Category, &d.Replies, &d.Created)
+
+	if err != nil {
+		http.Error(w, "Discussion non trouvée", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(d)
+}
+
+// Récupérer les réponses d'une discussion
+func getReplies(w http.ResponseWriter, r *http.Request) {
+	discussionID := r.URL.Query().Get("discussion_id")
+
+	rows, err := db.Query(`
+		SELECT id, content, user_id, (SELECT username FROM users WHERE id = replies.user_id), 
+		       discussion_id, created_at
+		FROM replies
+		WHERE discussion_id = ?
+		ORDER BY created_at ASC
+	`, discussionID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	replies := []Reply{}
+	for rows.Next() {
+		var r Reply
+		err := rows.Scan(&r.ID, &r.Content, &r.UserID, &r.Username, &r.DiscussionID, &r.Created)
+		if err != nil {
+			continue
+		}
+		replies = append(replies, r)
+	}
+
+	json.NewEncoder(w).Encode(replies)
+}
+
+// Créer une réponse
+func createReply(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Content      string `json:"content"`
+		UserID       int    `json:"user_id"`
+		DiscussionID int    `json:"discussion_id"`
+	}
+
+	json.NewDecoder(r.Body).Decode(&req)
+
+	result, err := db.Exec(
+		"INSERT INTO replies (content, user_id, discussion_id) VALUES (?, ?, ?)",
+		req.Content, req.UserID, req.DiscussionID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	id, _ := result.LastInsertId()
+	json.NewEncoder(w).Encode(map[string]interface{}{"id": id, "success": true})
+}
+
+// Enregistrer un utilisateur
+func registerUser(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Username string `json:"username"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	json.NewDecoder(r.Body).Decode(&req)
+
+	result, err := db.Exec(
+		"INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
+		req.Username, req.Email, req.Password)
+	if err != nil {
+		http.Error(w, "Utilisateur déjà existant", http.StatusBadRequest)
+		return
+	}
+
+	id, _ := result.LastInsertId()
+	json.NewEncoder(w).Encode(map[string]interface{}{"id": id, "success": true})
+}
+
+// Connecter un utilisateur
+func loginUser(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	json.NewDecoder(r.Body).Decode(&req)
+
+	var user User
+	err := db.QueryRow(
+		"SELECT id, username, email FROM users WHERE email = ? AND password = ?",
+		req.Email, req.Password).Scan(&user.ID, &user.Username, &user.Email)
+
+	if err != nil {
+		http.Error(w, "Email ou mot de passe incorrect", http.StatusUnauthorized)
+		return
+	}
+
+	json.NewEncoder(w).Encode(user)
 }
