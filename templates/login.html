@@ -1,96 +1,12 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<<<<<<< HEAD
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Connexion - BMW Community</title>
-  <link rel="stylesheet" href="/static/style.css">
-=======
     <meta charset="UTF-8">
     <title>Connexion</title>
     <link rel="stylesheet" href="/static/style.css">
->>>>>>> abd9e0a9d70e72c6707d9f87619758f3e25f54ef
 </head>
 <body class="auth-page">
 
-<<<<<<< HEAD
-<div class="auth-container">
-  <a href="/" class="back-link">← Retour à l'accueil</a>
-  <div class="auth-form">
-    <h1>Connexion</h1>
-    <form id="login-form">
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" placeholder="votre@email.com" required>
-        <div class="error-message" id="email-error"></div>
-      </div>
-
-      <div class="form-group">
-        <label for="password">Mot de passe</label>
-        <input type="password" id="password" name="password" placeholder="Votre mot de passe" required>
-        <div class="error-message" id="password-error"></div>
-      </div>
-
-      <div class="error-message" id="form-error"></div>
-      <div class="success-message" id="form-success"></div>
-
-      <button type="submit" class="submit-btn">Se connecter</button>
-    </form>
-
-    <div class="auth-link">
-      Pas encore inscrit? <a href="/register">Créer un compte</a>
-    </div>
-  </div>
-</div>
-
-<script>
-  document.getElementById('login-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-
-    document.getElementById('form-error').style.display = 'none';
-    document.getElementById('form-success').style.display = 'none';
-
-    fetch('/api/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        email: email,
-        password: password
-      })
-    })
-    .then(response => {
-      if (!response.ok) {
-        return response.text().then(text => {
-          throw new Error(text);
-        });
-      }
-      return response.json();
-    })
-    .then(user => {
-      localStorage.setItem('user', JSON.stringify(user));
-      
-      const successMsg = document.getElementById('form-success');
-      successMsg.textContent = 'Connexion réussie! Redirection...';
-      successMsg.style.display = 'block';
-
-      setTimeout(() => {
-        window.location.href = '/forum';
-      }, 1500);
-    })
-    .catch(error => {
-      const errorMsg = document.getElementById('form-error');
-      errorMsg.textContent = error.message || 'Email ou mot de passe incorrect';
-      errorMsg.style.display = 'block';
-    });
-  });
-</script>
-=======
     <div class="auth-box">
 
         <h1>Connexion</h1>
@@ -113,7 +29,6 @@
         </p>
 
     </div>
->>>>>>> abd9e0a9d70e72c6707d9f87619758f3e25f54ef
 
 </body>
 </html>

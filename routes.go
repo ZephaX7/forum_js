@@ -1,9 +1,13 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 // Structures de données
@@ -31,6 +35,19 @@ type Reply struct {
 	Username     string `json:"username"`
 	DiscussionID int    `json:"discussion_id"`
 	Created      string `json:"created_at"`
+}
+
+var db *sql.DB
+
+func init() {
+	var err error
+	db, err = sql.Open("sqlite3", "forum.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err = db.Ping(); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func routes() {
