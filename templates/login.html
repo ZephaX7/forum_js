@@ -11,17 +11,13 @@
 
         <h1>Connexion</h1>
 
-        <form>
-
-            <input type="email" placeholder="Email" required>
-
-            <input type="password" placeholder="Mot de passe" required>
-
-            <button type="submit">
-                Se connecter
-            </button>
-
+        <form id="loginForm">
+            <input type="email" id="email" placeholder="Email" required>
+            <input type="password" id="password" placeholder="Mot de passe" required>
+            <button type="submit">Se connecter</button>
         </form>
+
+        <div id="error" style="color: red; margin-top: 10px; display: none;"></div>
 
         <p>
             Pas encore de compte ?
@@ -29,6 +25,34 @@
         </p>
 
     </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('error');
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Email ou mot de passe incorrect');
+                }
+                
+                const user = await response.json();
+                localStorage.setItem('user', JSON.stringify(user));
+                window.location.href = '/forum';
+            } catch (err) {
+                errorDiv.textContent = err.message;
+                errorDiv.style.display = 'block';
+            }
+        });
+    </script>
 
 </body>
 </html>

@@ -11,13 +11,13 @@
 
         <h1>Inscription</h1>
 
-        <form>
+        <form id="registerForm">
 
-            <input type="text" placeholder="Nom" required>
+            <input type="text" id="username" placeholder="Nom" required>
 
-            <input type="email" placeholder="Email" required>
+            <input type="email" id="email" placeholder="Email" required>
 
-            <input type="password" placeholder="Mot de passe" required>
+            <input type="password" id="password" placeholder="Mot de passe" required>
 
             <button type="submit">
                 Créer un compte
@@ -25,12 +25,42 @@
 
         </form>
 
+        <div id="error" style="color: red; margin-top: 10px; display: none;\"></div>
+
         <p>
             Déjà un compte ?
             <a href="/login">Connexion</a>
         </p>
 
     </div>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('error');
+            
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Cet email existe déjà ou une erreur est survenue');
+                }
+                
+                alert('Compte créé avec succès ! Veuillez vous connecter.');
+                window.location.href = '/login';
+            } catch (err) {
+                errorDiv.textContent = err.message;
+                errorDiv.style.display = 'block';
+            }
+        });
+    </script>
 
 </body>
 </html>
