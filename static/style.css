@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 * {
   box-sizing: border-box;
 }
@@ -695,29 +696,154 @@ footer p {
       font-size: 18px;
       margin: 20px 0;
     }
+=======
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:#f4f4f4;
+    color:#333;
+}
 
-.features {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 20px;
-      padding: 40px;
-    }
+/* ===== HEADER ===== */
 
-.card {
-      background-color: white;
-      padding: 20px;
-      border-radius: 15px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
+header{
+    background:black;
+    color:white;
+    padding:15px 30px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
 
-.cta {
-      text-align: center;
-      padding: 50px;
-    }
+header h1{
+    margin:0;
+}
 
-footer {
-      background-color: black;
-      color: white;
-      text-align: center;
-      padding: 20px;
-    }
+/* ===== BOUTONS ===== */
+
+.btn{
+    padding:10px 15px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    margin-left:10px;
+    text-decoration:none;
+}
+
+.btn-primary{
+    background:white;
+    color:black;
+}
+
+.btn-secondary{
+    background:gray;
+    color:white;
+}
+
+/* ===== HERO ===== */
+>>>>>>> abd9e0a9d70e72c6707d9f87619758f3e25f54ef
+
+.hero{
+    text-align:center;
+    padding:80px 20px;
+    background:linear-gradient(to right,#000,#444);
+    color:white;
+}
+
+.hero h2{
+    font-size:40px;
+}
+
+.hero p{
+    font-size:18px;
+    margin:20px 0;
+}
+
+/* ===== FEATURES ===== */
+
+.features{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:20px;
+    padding:40px;
+}
+
+.card{
+    background:white;
+    padding:20px;
+    border-radius:15px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* ===== CTA ===== */
+
+.cta{
+    text-align:center;
+    padding:50px;
+}
+
+/* ===== FOOTER ===== */
+
+footer{
+    background:black;
+    color:white;
+    text-align:center;
+    padding:20px;
+}
+
+/* ===== LOGIN / REGISTER ===== */
+
+.auth-page{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    background:linear-gradient(to right,#000,#333);
+}
+
+.auth-box{
+    width:350px;
+    background:white;
+    padding:40px;
+    border-radius:20px;
+    box-shadow:0 5px 20px rgba(0,0,0,0.3);
+    text-align:center;
+}
+
+.auth-box h1{
+    margin-bottom:30px;
+}
+
+.auth-box input{
+    width:100%;
+    padding:12px;
+    margin:10px 0;
+    border:1px solid #ccc;
+    border-radius:8px;
+    font-size:16px;
+    box-sizing:border-box;
+}
+
+.auth-box button{
+    width:100%;
+    padding:12px;
+    margin-top:15px;
+    background:black;
+    color:white;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+.auth-box button:hover{
+    background:#333;
+}
+
+.auth-box p{
+    margin-top:20px;
+}
+
+.auth-box a{
+    color:#0077ff;
+    text-decoration:none;
+}
