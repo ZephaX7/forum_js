@@ -5,10 +5,18 @@ body{
     color:#333;
 }
 
+:root{
+    --bmw-blue:#0068D5;
+    --bmw-purple:#5C2E8F;
+    --bmw-red:#E21A3C;
+    --bmw-dark:#0b1220;
+    --bmw-bg:#f4f4f4;
+}
+
 /* ===== HEADER ===== */
 
 header{
-    background:black;
+    background:linear-gradient(90deg,var(--bmw-blue),var(--bmw-purple),var(--bmw-red));
     color:white;
     padding:15px 30px;
     display:flex;
@@ -32,25 +40,46 @@ header h1{
 }
 
 .btn-primary{
-    background:white;
-    color:black;
+    background:var(--bmw-blue);
+    color:white;
 }
 
 .btn-secondary{
-    background:gray;
+    background:var(--bmw-purple);
     color:white;
 }
 
 /* ===== HERO ===== */
 
 .hero{
+    position:relative;
     text-align:center;
-    padding:80px 20px;
-    background:linear-gradient(to right,#000,#444);
+    padding:100px 20px;
     color:white;
+    background:linear-gradient(90deg,var(--bmw-blue) 0%, var(--bmw-purple) 45%, var(--bmw-red) 100%);
+    overflow:hidden;
+}
+
+.hero::before{
+    content:'';
+    position:absolute;
+    left:-20%;
+    top:0;
+    width:140%;
+    height:100%;
+    background:repeating-linear-gradient(
+        135deg,
+        rgba(255,255,255,0.18) 0,
+        rgba(255,255,255,0.18) 12px,
+        transparent 12px,
+        transparent 24px
+    );
+    pointer-events:none;
+    opacity:0.35;
 }
 
 .hero h2{
+    position:relative;
     font-size:40px;
 }
 
@@ -85,7 +114,7 @@ header h1{
 /* ===== FOOTER ===== */
 
 footer{
-    background:black;
+    background:var(--bmw-dark);
     color:white;
     text-align:center;
     padding:20px;
@@ -98,7 +127,7 @@ footer{
     justify-content:center;
     align-items:center;
     height:100vh;
-    background:linear-gradient(to right,#000,#333);
+    background:linear-gradient(135deg,var(--bmw-blue),var(--bmw-purple),var(--bmw-red));
 }
 
 .auth-box{
@@ -128,7 +157,7 @@ footer{
     width:100%;
     padding:12px;
     margin-top:15px;
-    background:black;
+    background:var(--bmw-blue);
     color:white;
     border:none;
     border-radius:8px;
@@ -136,7 +165,7 @@ footer{
 }
 
 .auth-box button:hover{
-    background:#333;
+    background:var(--bmw-purple);
 }
 
 .auth-box p{
@@ -144,7 +173,7 @@ footer{
 }
 
 .auth-box a{
-    color:#0077ff;
+    color:var(--bmw-red);
     text-decoration:none;
 }
 
