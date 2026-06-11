@@ -1,4 +1,4 @@
-package main
+package src
 
 import (
 	"database/sql"
@@ -38,22 +38,22 @@ type Reply struct {
 	Created      string `json:"created_at"`
 }
 
-var db *sql.DB
-var tmpl *template.Template
+var Db *sql.DB
+var Tmpl *template.Template
 
 func init() {
 	var err error
-	db, err = sql.Open("sqlite3", "forum.db")
+	Db, err = sql.Open("sqlite3", "forum.db")
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err = db.Ping(); err != nil {
+	if err = Db.Ping(); err != nil {
 		log.Fatal(err)
 	}
 	createTables()
 
 	// Charger les templates
-	tmpl, err = template.ParseGlob("templates/*.html")
+	Tmpl, err = template.ParseGlob("templates/*.html")
 	if err != nil {
 		log.Fatal("Erreur chargement templates:", err)
 	}
@@ -89,43 +89,44 @@ func createTables() {
 	}
 
 	for _, table := range tables {
-		_, err := db.Exec(table)
+		_, err := Db.Exec(table)
 		if err != nil {
 			log.Printf("Erreur création table: %v\n", err)
 		}
 	}
 }
 
-func routes() {
+func Routes() {
 
 	http.Handle("/static/", http.StripPrefix("/static/",
 		http.FileServer(http.Dir("static"))))
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		tmpl.ExecuteTemplate(w, "index.html", nil)
+		Tmpl.ExecuteTemplate(w, "index.html", nil)
 	})
 
 	http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		tmpl.ExecuteTemplate(w, "login.html", nil)
+		Tmpl.ExecuteTemplate(w, "login.html", nil)
 	})
 
 	http.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		tmpl.ExecuteTemplate(w, "register.html", nil)
+		Tmpl.ExecuteTemplate(w, "register.html", nil)
 	})
 
 	http.HandleFunc("/forum", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		tmpl.ExecuteTemplate(w, "forum.html", nil)
+		Tmpl.ExecuteTemplate(w, "forum.html", nil)
 	})
 
 	http.HandleFunc("/api/discussions", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		if r.Method == "GET" {
+		switch r.Method {
+		case "GET":
 			getDiscussions(w, r)
-		} else if r.Method == "POST" {
+		case "POST":
 			createDiscussion(w, r)
 		}
 	})
@@ -139,9 +140,10 @@ func routes() {
 
 	http.HandleFunc("/api/replies", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		if r.Method == "GET" {
+		switch r.Method {
+		case "GET":
 			getReplies(w, r)
-		} else if r.Method == "POST" {
+		case "POST":
 			createReply(w, r)
 		}
 	})
@@ -149,20 +151,20 @@ func routes() {
 	http.HandleFunc("/api/register", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if r.Method == "POST" {
-			registerUser(w, r)
+			RegisterUser(w, r)
 		}
 	})
 
 	http.HandleFunc("/api/login", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if r.Method == "POST" {
-			loginUser(w, r)
+			LoginUser(w, r)
 		}
 	})
 }
 
-func getDiscussions(w http.ResponseWriter, r *http.Request) {
-	rows, err := db.Query(`
+func getDiscussions(w http.ResponseWriter, _ *http.Request) {
+	rows, err := Db.Query(`
 		SELECT d.id, d.title, d.content, d.user_id, u.username, d.category, 
 		       COUNT(r.id) as reply_count, d.created_at
 		FROM discussions d
@@ -201,7 +203,7 @@ func createDiscussion(w http.ResponseWriter, r *http.Request) {
 
 	json.NewDecoder(r.Body).Decode(&req)
 
-	result, err := db.Exec(
+	result, err := Db.Exec(
 		"INSERT INTO discussions (title, content, user_id, category) VALUES (?, ?, ?, ?)",
 		req.Title, req.Content, req.UserID, req.Category)
 	if err != nil {
@@ -219,7 +221,7 @@ func getDiscussionDetail(w http.ResponseWriter, r *http.Request) {
 	discussionID, _ := strconv.Atoi(id)
 
 	var d Discussion
-	err := db.QueryRow(`
+	err := Db.QueryRow(`
 		SELECT d.id, d.title, d.content, d.user_id, u.username, d.category, 
 		       COUNT(r.id) as reply_count, d.created_at
 		FROM discussions d
@@ -241,7 +243,7 @@ func getDiscussionDetail(w http.ResponseWriter, r *http.Request) {
 func getReplies(w http.ResponseWriter, r *http.Request) {
 	discussionID := r.URL.Query().Get("discussion_id")
 
-	rows, err := db.Query(`
+	rows, err := Db.Query(`
 		SELECT id, content, user_id, (SELECT username FROM users WHERE id = replies.user_id), 
 		       discussion_id, created_at
 		FROM replies
@@ -277,7 +279,7 @@ func createReply(w http.ResponseWriter, r *http.Request) {
 
 	json.NewDecoder(r.Body).Decode(&req)
 
-	result, err := db.Exec(
+	result, err := Db.Exec(
 		"INSERT INTO replies (content, user_id, discussion_id) VALUES (?, ?, ?)",
 		req.Content, req.UserID, req.DiscussionID)
 	if err != nil {

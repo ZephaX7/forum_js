@@ -1,4 +1,4 @@
-package main
+package src
 
 import (
 	"encoding/json"
@@ -19,7 +19,7 @@ func verifyPassword(hashedPassword, password string) error {
 }
 
 // Enregistrer un utilisateur
-func registerUser(w http.ResponseWriter, r *http.Request) {
+func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var req struct {
@@ -47,7 +47,7 @@ func registerUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Insérer dans la base de données
-	result, err := db.Exec(
+	result, err := Db.Exec(
 		"INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
 		req.Username, req.Email, hashedPassword)
 
@@ -67,7 +67,7 @@ func registerUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // Connecter un utilisateur
-func loginUser(w http.ResponseWriter, r *http.Request) {
+func LoginUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var req struct {
@@ -84,7 +84,7 @@ func loginUser(w http.ResponseWriter, r *http.Request) {
 	var hashedPassword string
 
 	// Récupérer l'utilisateur de la base de données
-	err := db.QueryRow(
+	err := Db.QueryRow(
 		"SELECT id, username, email, password FROM users WHERE email = ?",
 		req.Email).Scan(&user.ID, &user.Username, &user.Email, &hashedPassword)
 
