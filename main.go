@@ -12,7 +12,6 @@ func main() {
 	routes()
 	log.Println("Serveur démarré sur http://localhost:8080")
 
-	// Ouvre le navigateur par défaut après un court délai
 	go func() {
 		time.Sleep(300 * time.Millisecond)
 		url := "http://localhost:8080"
