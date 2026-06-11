@@ -9,6 +9,7 @@ import (
 )
 
 func main() {
+	Routes()
 	log.Println("Serveur démarré sur http://localhost:8080")
 
 	go func() {
