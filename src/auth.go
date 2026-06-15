@@ -1,4 +1,4 @@
-package src
+package main
 
 import (
 	"encoding/json"
@@ -47,7 +47,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Insérer dans la base de données
-	result, err := Db.Exec(
+	result, err := db.Exec(
 		"INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
 		req.Username, req.Email, hashedPassword)
 
@@ -84,7 +84,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 	var hashedPassword string
 
 	// Récupérer l'utilisateur de la base de données
-	err := Db.QueryRow(
+	err := db.QueryRow(
 		"SELECT id, username, email, password FROM users WHERE email = ?",
 		req.Email).Scan(&user.ID, &user.Username, &user.Email, &hashedPassword)
 
