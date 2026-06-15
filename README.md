@@ -59,21 +59,6 @@ forum_js/
     └── forum.js         # JavaScript du forum
 ```
 
-## 🔌 API Endpoints
-
-### Utilisateurs
-- `POST /api/register` - Créer un compte
-- `POST /api/login` - Se connecter
-
-### Discussions
-- `GET /api/discussions` - Récupérer toutes les discussions
-- `POST /api/discussions` - Créer une discussion
-- `GET /api/discussions/:id` - Récupérer les détails d'une discussion
-
-### Réponses
-- `GET /api/replies?discussion_id=:id` - Récupérer les réponses
-- `POST /api/replies` - Créer une réponse
-
 ## 💡 Utilisation
 
 1. **Visitez la page d'accueil** `http://localhost:8080`
@@ -96,9 +81,6 @@ forum_js/
 - Utilisez HTTPS
 - Limitez les requêtes (rate limiting)
 
-## 📝 License
-
-Libre d'utilisation pour la communauté BMW.
 
 ---
 
