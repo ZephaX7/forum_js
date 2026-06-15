@@ -10,7 +10,6 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// Structures de données
 type User struct {
 	ID       int    `json:"id"`
 	Username string `json:"username"`
@@ -225,7 +224,6 @@ func getDiscussionDetail(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(d)
 }
 
-// Récupérer les réponses d'une discussion
 func getReplies(w http.ResponseWriter, r *http.Request) {
 	discussionID := r.URL.Query().Get("discussion_id")
 
@@ -255,7 +253,6 @@ func getReplies(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(replies)
 }
 
-// Créer une réponse
 func createReply(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Content      string `json:"content"`
@@ -277,7 +274,6 @@ func createReply(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{"id": id, "success": true})
 }
 
-// Enregistrer un utilisateur
 func registerUser(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Username string `json:"username"`
@@ -299,7 +295,6 @@ func registerUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{"id": id, "success": true})
 }
 
-// Connecter un utilisateur
 func loginUser(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Email    string `json:"email"`
