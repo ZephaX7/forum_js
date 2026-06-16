@@ -63,6 +63,4 @@ go run .
 
 ---
 
-## Statut du projet
-
-Projet fonctionnel démontrant la création d'un forum web.
+Projet uniquement à but éducatif démontrant la création d'un forum web.
