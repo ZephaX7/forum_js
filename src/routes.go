@@ -3,15 +3,13 @@ package src
 import (
 	"database/sql"
 	"encoding/json"
-	"html/template"
 	"log"
 	"net/http"
 	"strconv"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/lib/pq"
 )
 
-// Structures de données
 type User struct {
 	ID       int    `json:"id"`
 	Username string `json:"username"`
@@ -38,26 +36,7 @@ type Reply struct {
 	Created      string `json:"created_at"`
 }
 
-var Db *sql.DB
-var Tmpl *template.Template
-
-func init() {
-	var err error
-	Db, err = sql.Open("sqlite3", "forum.db")
-	if err != nil {
-		log.Fatal(err)
-	}
-	if err = Db.Ping(); err != nil {
-		log.Fatal(err)
-	}
-	createTables()
-
-	// Charger les templates
-	Tmpl, err = template.ParseGlob("templates/*.html")
-	if err != nil {
-		log.Fatal("Erreur chargement templates:", err)
-	}
-}
+var db *sql.DB
 
 func createTables() {
 	tables := []string{
@@ -89,7 +68,7 @@ func createTables() {
 	}
 
 	for _, table := range tables {
-		_, err := Db.Exec(table)
+		_, err := DB.Exec(table)
 		if err != nil {
 			log.Printf("Erreur création table: %v\n", err)
 		}
@@ -102,31 +81,26 @@ func Routes() {
 		http.FileServer(http.Dir("static"))))
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		Tmpl.ExecuteTemplate(w, "index.html", nil)
+		http.ServeFile(w, r, "templates/index.html")
 	})
 
 	http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		Tmpl.ExecuteTemplate(w, "login.html", nil)
+		http.ServeFile(w, r, "templates/login.html")
 	})
 
 	http.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		Tmpl.ExecuteTemplate(w, "register.html", nil)
+		http.ServeFile(w, r, "templates/register.html")
 	})
 
 	http.HandleFunc("/forum", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		Tmpl.ExecuteTemplate(w, "forum.html", nil)
+		http.ServeFile(w, r, "templates/forum.html")
 	})
 
 	http.HandleFunc("/api/discussions", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		switch r.Method {
-		case "GET":
+		if r.Method == "GET" {
 			getDiscussions(w, r)
-		case "POST":
+		} else if r.Method == "POST" {
 			createDiscussion(w, r)
 		}
 	})
@@ -140,10 +114,9 @@ func Routes() {
 
 	http.HandleFunc("/api/replies", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		switch r.Method {
-		case "GET":
+		if r.Method == "GET" {
 			getReplies(w, r)
-		case "POST":
+		} else if r.Method == "POST" {
 			createReply(w, r)
 		}
 	})
@@ -151,20 +124,20 @@ func Routes() {
 	http.HandleFunc("/api/register", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if r.Method == "POST" {
-			RegisterUser(w, r)
+			registerUser(w, r)
 		}
 	})
 
 	http.HandleFunc("/api/login", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if r.Method == "POST" {
-			LoginUser(w, r)
+			loginUser(w, r)
 		}
 	})
 }
 
-func getDiscussions(w http.ResponseWriter, _ *http.Request) {
-	rows, err := Db.Query(`
+func getDiscussions(w http.ResponseWriter, r *http.Request) {
+	rows, err := DB.Query(`
 		SELECT d.id, d.title, d.content, d.user_id, u.username, d.category, 
 		       COUNT(r.id) as reply_count, d.created_at
 		FROM discussions d
@@ -203,8 +176,8 @@ func createDiscussion(w http.ResponseWriter, r *http.Request) {
 
 	json.NewDecoder(r.Body).Decode(&req)
 
-	result, err := Db.Exec(
-		"INSERT INTO discussions (title, content, user_id, category) VALUES (?, ?, ?, ?)",
+	result, err := DB.Exec(
+		"INSERT INTO discussions (title, content, user_id, category) VALUES ($1, $2, $3, $4	)",
 		req.Title, req.Content, req.UserID, req.Category)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -221,13 +194,13 @@ func getDiscussionDetail(w http.ResponseWriter, r *http.Request) {
 	discussionID, _ := strconv.Atoi(id)
 
 	var d Discussion
-	err := Db.QueryRow(`
+	err := DB.QueryRow(`
 		SELECT d.id, d.title, d.content, d.user_id, u.username, d.category, 
 		       COUNT(r.id) as reply_count, d.created_at
 		FROM discussions d
 		LEFT JOIN users u ON d.user_id = u.id
 		LEFT JOIN replies r ON d.id = r.discussion_id
-		WHERE d.id = ?
+		WHERE d.id = $1
 		GROUP BY d.id
 	`, discussionID).Scan(&d.ID, &d.Title, &d.Content, &d.UserID, &d.Username, &d.Category, &d.Replies, &d.Created)
 
@@ -239,15 +212,14 @@ func getDiscussionDetail(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(d)
 }
 
-// Récupérer les réponses d'une discussion
 func getReplies(w http.ResponseWriter, r *http.Request) {
 	discussionID := r.URL.Query().Get("discussion_id")
 
-	rows, err := Db.Query(`
+	rows, err := DB.Query(`
 		SELECT id, content, user_id, (SELECT username FROM users WHERE id = replies.user_id), 
 		       discussion_id, created_at
 		FROM replies
-		WHERE discussion_id = ?
+		WHERE discussion_id = $1
 		ORDER BY created_at ASC
 	`, discussionID)
 	if err != nil {
@@ -269,7 +241,6 @@ func getReplies(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(replies)
 }
 
-// Créer une réponse
 func createReply(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Content      string `json:"content"`
@@ -279,8 +250,8 @@ func createReply(w http.ResponseWriter, r *http.Request) {
 
 	json.NewDecoder(r.Body).Decode(&req)
 
-	result, err := Db.Exec(
-		"INSERT INTO replies (content, user_id, discussion_id) VALUES (?, ?, ?)",
+	result, err := DB.Exec(
+		"INSERT INTO replies (content, user_id, discussion_id) VALUES ($1, $2, $3)",
 		req.Content, req.UserID, req.DiscussionID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -289,4 +260,46 @@ func createReply(w http.ResponseWriter, r *http.Request) {
 
 	id, _ := result.LastInsertId()
 	json.NewEncoder(w).Encode(map[string]interface{}{"id": id, "success": true})
+}
+
+func registerUser(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Username string `json:"username"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	json.NewDecoder(r.Body).Decode(&req)
+
+	result, err := DB.Exec(
+		"INSERT INTO users (username, email, password) VALUES ($1, $2, $3)",
+		req.Username, req.Email, req.Password)
+	if err != nil {
+		http.Error(w, "Utilisateur déjà existant", http.StatusBadRequest)
+		return
+	}
+
+	id, _ := result.LastInsertId()
+	json.NewEncoder(w).Encode(map[string]interface{}{"id": id, "success": true})
+}
+
+func loginUser(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	json.NewDecoder(r.Body).Decode(&req)
+
+	var user User
+	err := DB.QueryRow(
+		"SELECT id, username, email FROM users WHERE email = $1 AND password = $2",
+		req.Email, req.Password).Scan(&user.ID, &user.Username, &user.Email)
+
+	if err != nil {
+		http.Error(w, "Email ou mot de passe incorrect", http.StatusUnauthorized)
+		return
+	}
+
+	json.NewEncoder(w).Encode(user)
 }

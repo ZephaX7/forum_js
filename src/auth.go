@@ -8,12 +8,12 @@ import (
 )
 
 func hashPassword(password string) (string, error) {
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	return string(hashedPassword), err
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	return string(hash), err
 }
 
-func verifyPassword(hashedPassword, password string) error {
-	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+func verifyPassword(hash, password string) error {
+	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 }
 
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
@@ -30,35 +30,32 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(req.Username) < 3 || len(req.Email) < 5 || len(req.Password) < 6 {
-		http.Error(w, "Username (3+ caractères), email valide et password (6+ caractères) requis", http.StatusBadRequest)
+	if len(req.Username) < 3 || len(req.Password) < 6 {
+		http.Error(w, "Données invalides", http.StatusBadRequest)
 		return
 	}
 
-	hashedPassword, err := hashPassword(req.Password)
+	hash, err := hashPassword(req.Password)
 	if err != nil {
-		http.Error(w, "Erreur lors du hachage du mot de passe", http.StatusInternalServerError)
+		http.Error(w, "Erreur hash", http.StatusInternalServerError)
 		return
 	}
 
-	// Insérer dans la base de données
-	result, err := Db.Exec(
-		"INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
-		req.Username, req.Email, hashedPassword)
+	var userID int
+	err = DB.QueryRow(
+		"INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id",
+		req.Username, req.Email, hash,
+	).Scan(&userID)
 
 	if err != nil {
-		http.Error(w, "Utilisateur déjà existant ou erreur base de données", http.StatusBadRequest)
+		http.Error(w, "Utilisateur existe déjà", http.StatusBadRequest)
 		return
 	}
 
-	id, _ := result.LastInsertId()
-	user := User{
-		ID:       int(id),
-		Username: req.Username,
-		Email:    req.Email,
-	}
-
-	json.NewEncoder(w).Encode(map[string]interface{}{"success": true, "user": user})
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"user_id": userID,
+	})
 }
 
 func LoginUser(w http.ResponseWriter, r *http.Request) {
@@ -69,28 +66,30 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"`
 	}
 
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Données invalides", http.StatusBadRequest)
-		return
-	}
+	json.NewDecoder(r.Body).Decode(&req)
 
-	var user User
-	var hashedPassword string
+	var id int
+	var username, email, hash string
 
-	// Récupérer l'utilisateur de la base de données
-	err := Db.QueryRow(
-		"SELECT id, username, email, password FROM users WHERE email = ?",
-		req.Email).Scan(&user.ID, &user.Username, &user.Email, &hashedPassword)
+	err := DB.QueryRow(
+		"SELECT id, username, email, password FROM users WHERE email=$1",
+		req.Email,
+	).Scan(&id, &username, &email, &hash)
 
 	if err != nil {
-		http.Error(w, "Email ou mot de passe incorrect", http.StatusUnauthorized)
+		http.Error(w, "Identifiants invalides", http.StatusUnauthorized)
 		return
 	}
 
-	if err := verifyPassword(hashedPassword, req.Password); err != nil {
-		http.Error(w, "Email ou mot de passe incorrect", http.StatusUnauthorized)
+	if verifyPassword(hash, req.Password) != nil {
+		http.Error(w, "Identifiants invalides", http.StatusUnauthorized)
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]interface{}{"success": true, "user": user})
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success":  true,
+		"id":       id,
+		"username": username,
+		"email":    email,
+	})
 }

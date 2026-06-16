@@ -6,25 +6,27 @@ import (
 	"os/exec"
 	"runtime"
 	"time"
+
+	"forum_js/src"
 )
 
 func main() {
-	routes()
+	src.InitDB()
+	src.Routes()
+
 	log.Println("Serveur démarré sur http://localhost:8080")
 
 	go func() {
 		time.Sleep(300 * time.Millisecond)
-		url := "http://localhost:8080"
-		if err := openBrowser(url); err != nil {
-			log.Printf("Impossible d'ouvrir le navigateur: %v", err)
-		}
+		openBrowser("http://localhost:8080")
 	}()
 
-	http.ListenAndServe(":8080", nil)
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-func openBrowser(url string) error {
+func openBrowser(url string) {
 	var cmd *exec.Cmd
+
 	switch runtime.GOOS {
 	case "windows":
 		cmd = exec.Command("cmd", "/c", "start", "", url)
@@ -33,5 +35,8 @@ func openBrowser(url string) error {
 	default:
 		cmd = exec.Command("xdg-open", url)
 	}
-	return cmd.Start()
+
+	if err := cmd.Start(); err != nil {
+		log.Println("Erreur ouverture navigateur:", err)
+	}
 }

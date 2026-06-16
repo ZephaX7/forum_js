@@ -4,21 +4,24 @@ import (
 	"database/sql"
 	"fmt"
 
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 )
 
-func connectDB() {
-	dsn := "root:@tcp(127.0.0.1:3306)/forum_db"
+var DB *sql.DB
 
-	db, err := sql.Open("mysql", dsn)
+func InitDB() {
+	dsn := "postgresql://postgres.ghbszyzyfsyurcgvxske:.zwRn+CVB6bjy4C@aws-0-eu-west-1.pooler.supabase.com:5432/postgres?sslmode=require"
+
+	var err error
+	DB, err = sql.Open("postgres", dsn)
 	if err != nil {
 		panic(err)
 	}
 
-	err = db.Ping()
+	err = DB.Ping()
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println("✅ Connecté à MySQL")
+	fmt.Println(" Connecté à PostgreSQL")
 }
