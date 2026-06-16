@@ -7,52 +7,58 @@
 </head>
 <body class="auth-page">
 
-    <div class="auth-box">
+<div class="auth-box">
 
-        <h1>Connexion</h1>
+    <h1>Connexion</h1>
 
-        <form id="loginForm">
-            <input type="email" id="email" placeholder="Email" required>
-            <input type="password" id="password" placeholder="Mot de passe" required>
-            <button type="submit">Se connecter</button>
-        </form>
+    <form id="loginForm">
 
-        <div id="error" style="color: red; margin-top: 10px; display: none;"></div>
+        <input type="email" id="email" placeholder="Email" required>
 
-        <p>
-            Pas encore de compte ?
-            <a href="/register">Inscription</a>
-        </p>
+        <input type="password" id="password" placeholder="Mot de passe" required>
 
-    </div>
+        <button type="submit">Se connecter</button>
 
-    <script>
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const errorDiv = document.getElementById('error');
-            
-            try {
-                const response = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Email ou mot de passe incorrect');
-                }
-                
-                const user = await response.json();
-                localStorage.setItem('user', JSON.stringify(user));
-                window.location.href = '/forum';
-            } catch (err) {
-                errorDiv.textContent = err.message;
-                errorDiv.style.display = 'block';
-            }
+    </form>
+
+    <div id="error" style="color:red; display:none;"></div>
+
+    <p>
+        Pas encore de compte ?
+        <a href="/api/register">Inscription</a>
+    </p>
+
+</div>
+
+<script>
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    try {
+        const res = await fetch("http://localhost:8080/api/login", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                email: document.getElementById("email").value,
+                password: document.getElementById("password").value
+            })
         });
-    </script>
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(data.error);
+        }
+
+        localStorage.setItem("user", JSON.stringify(data));
+        window.location.href = "/forum";
+
+    } catch (err) {
+        document.getElementById("error").innerText = err.message;
+        document.getElementById("error").style.display = "block";
+    }
+});
+</script>
 
 </body>
 </html>
