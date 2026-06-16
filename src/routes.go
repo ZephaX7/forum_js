@@ -137,25 +137,37 @@ func Routes() {
 }
 
 func getDiscussions(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
 	rows, err := DB.Query(`
-		SELECT d.id, d.title, d.content, d.user_id, u.username, d.category, 
-		       COUNT(r.id) as reply_count, d.created_at
-		FROM discussions d
-		LEFT JOIN users u ON d.user_id = u.id
-		LEFT JOIN replies r ON d.id = r.discussion_id
-		GROUP BY d.id
-		ORDER BY d.created_at DESC
-	`)
+        SELECT d.id, d.title, d.content, d.user_id, u.username, d.category,
+               COUNT(r.id) as reply_count, d.created_at
+        FROM discussions d
+        LEFT JOIN users u ON d.user_id = u.id
+        LEFT JOIN replies r ON d.id = r.discussion_id
+        GROUP BY d.id, d.title, d.content, d.user_id, u.username, d.category, d.created_at
+        ORDER BY d.created_at DESC
+    `)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), 500)
 		return
 	}
 	defer rows.Close()
 
-	discussions := []Discussion{}
+	var discussions []Discussion
+
 	for rows.Next() {
 		var d Discussion
-		err := rows.Scan(&d.ID, &d.Title, &d.Content, &d.UserID, &d.Username, &d.Category, &d.Replies, &d.Created)
+		err := rows.Scan(
+			&d.ID,
+			&d.Title,
+			&d.Content,
+			&d.UserID,
+			&d.Username,
+			&d.Category,
+			&d.Replies,
+			&d.Created,
+		)
 		if err != nil {
 			continue
 		}
