@@ -55,6 +55,10 @@ func Routes() {
 	})
 
 	http.HandleFunc("/api/discussions", discussionsHandler)
+	http.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "templates/register.html")
+	})
+
 	http.HandleFunc("/api/discussions/", getDiscussionDetail)
 	http.HandleFunc("/api/replies", repliesHandler)
 	http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
