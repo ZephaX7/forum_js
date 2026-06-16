@@ -1,23 +1,27 @@
 body{
     margin:0;
     font-family:Arial,sans-serif;
-    background:#f4f4f4;
-    color:#333;
+    background:#fff url('https://upload.wikimedia.org/wikipedia/commons/0/05/BMW_M5_sedan_2007.jpg') center center / cover no-repeat fixed;
+    color:#111;
 }
 
+/* ===== VARIABLES ===== */
+
 :root{
-    --bmw-blue:#0068D5;
-    --bmw-purple:#5C2E8F;
-    --bmw-red:#E21A3C;
-    --bmw-dark:#0b1220;
-    --bmw-bg:#f4f4f4;
+    --bg:#fff;
+    --surface:#f7f7f7;
+    --surface-strong:#e7e7e7;
+    --text:#111;
+    --text-muted:#666;
+    --border:#ccc;
+    --border-strong:#999;
 }
 
 /* ===== HEADER ===== */
 
 header{
-    background:linear-gradient(90deg,var(--bmw-blue),var(--bmw-purple),var(--bmw-red));
-    color:white;
+    background:var(--surface);
+    color:var(--text);
     padding:15px 30px;
     display:flex;
     justify-content:space-between;
@@ -40,13 +44,13 @@ header h1{
 }
 
 .btn-primary{
-    background:var(--bmw-blue);
-    color:white;
+    background:#111;
+    color:#fff;
 }
 
 .btn-secondary{
-    background:var(--bmw-purple);
-    color:white;
+    background:#444;
+    color:#fff;
 }
 
 /* ===== HERO ===== */
@@ -55,27 +59,20 @@ header h1{
     position:relative;
     text-align:center;
     padding:100px 20px;
-    color:white;
-    background:linear-gradient(90deg,var(--bmw-blue) 0%, var(--bmw-purple) 45%, var(--bmw-red) 100%);
+    color:var(--text);
+    background:var(--surface);
     overflow:hidden;
 }
 
 .hero::before{
     content:'';
     position:absolute;
-    left:-20%;
+    left:0;
     top:0;
-    width:140%;
+    width:100%;
     height:100%;
-    background:repeating-linear-gradient(
-        135deg,
-        rgba(255,255,255,0.18) 0,
-        rgba(255,255,255,0.18) 12px,
-        transparent 12px,
-        transparent 24px
-    );
+    background:rgba(0,0,0,0.04);
     pointer-events:none;
-    opacity:0.35;
 }
 
 .hero h2{
@@ -98,10 +95,11 @@ header h1{
 }
 
 .card{
-    background:white;
+    background:#fff;
     padding:20px;
     border-radius:15px;
-    box-shadow:0 4px 10px rgba(0,0,0,0.1);
+    box-shadow:0 4px 10px rgba(0,0,0,0.08);
+    color:var(--text);
 }
 
 /* ===== CTA ===== */
@@ -114,8 +112,8 @@ header h1{
 /* ===== FOOTER ===== */
 
 footer{
-    background:var(--bmw-dark);
-    color:white;
+    background:var(--surface);
+    color:var(--text);
     text-align:center;
     padding:20px;
 }
@@ -126,17 +124,18 @@ footer{
     display:flex;
     justify-content:center;
     align-items:center;
-    height:100vh;
-    background:linear-gradient(135deg,var(--bmw-blue),var(--bmw-purple),var(--bmw-red));
+    min-height:100vh;
+    background:var(--bg);
 }
 
 .auth-box{
     width:350px;
-    background:white;
+    background:#fff;
     padding:40px;
     border-radius:20px;
-    box-shadow:0 5px 20px rgba(0,0,0,0.3);
+    box-shadow:0 5px 20px rgba(0,0,0,0.1);
     text-align:center;
+    color:var(--text);
 }
 
 .auth-box h1{
@@ -147,7 +146,9 @@ footer{
     width:100%;
     padding:12px;
     margin:10px 0;
-    border:1px solid #ccc;
+    border:1px solid var(--border);
+    background:#fff;
+    color:var(--text);
     border-radius:8px;
     font-size:16px;
     box-sizing:border-box;
@@ -157,15 +158,15 @@ footer{
     width:100%;
     padding:12px;
     margin-top:15px;
-    background:var(--bmw-blue);
-    color:white;
+    background:#111;
+    color:#fff;
     border:none;
     border-radius:8px;
     cursor:pointer;
 }
 
 .auth-box button:hover{
-    background:var(--bmw-purple);
+    background:#222;
 }
 
 .auth-box p{
@@ -173,7 +174,7 @@ footer{
 }
 
 .auth-box a{
-    color:var(--bmw-red);
+    color:var(--text);
     text-decoration:none;
 }
 
@@ -189,18 +190,18 @@ footer{
     text-align:center;
     margin-bottom:40px;
     padding:30px 0;
-    border-bottom:2px solid #ddd;
+    border-bottom:2px solid var(--border);
 }
 
 .forum-header h2{
     margin:0 0 10px 0;
     font-size:32px;
-    color:#000;
+    color:var(--text);
 }
 
 .forum-header p{
     margin:0 0 20px 0;
-    color:#666;
+    color:var(--text-muted);
     font-size:16px;
 }
 
@@ -216,8 +217,9 @@ footer{
 
 .category-btn{
     padding:10px 20px;
-    border:2px solid #ddd;
-    background:white;
+    border:2px solid var(--border);
+    background:#fff;
+    color:var(--text);
     border-radius:25px;
     cursor:pointer;
     font-size:14px;
@@ -225,19 +227,20 @@ footer{
 }
 
 .category-btn:hover{
-    border-color:#000;
-    background:#f0f0f0;
+    border-color:#111;
+    background:var(--surface);
 }
 
 .category-btn.active{
-    background:black;
-    color:white;
-    border-color:black;
+    background:#111;
+    color:#fff;
+    border-color:#111;
 }
 
 .category-badge{
     display:inline-block;
-    background:#e9ecef;
+    background:var(--border);
+    color:var(--text);
     padding:4px 12px;
     border-radius:15px;
     font-size:12px;
@@ -252,18 +255,18 @@ footer{
 }
 
 .discussion-card{
-    background:white;
+    background:#fff;
     padding:20px;
     border-radius:10px;
-    box-shadow:0 2px 8px rgba(0,0,0,0.1);
+    box-shadow:0 2px 8px rgba(0,0,0,0.08);
     cursor:pointer;
     transition:all 0.3s;
-    border-left:4px solid #e9ecef;
+    border-left:4px solid var(--border);
 }
 
 .discussion-card:hover{
-    box-shadow:0 4px 12px rgba(0,0,0,0.15);
-    border-left-color:#000;
+    box-shadow:0 4px 12px rgba(0,0,0,0.12);
+    border-left-color:#111;
 }
 
 .discussion-header{
@@ -275,12 +278,12 @@ footer{
 
 .discussion-header h3{
     margin:0;
-    color:#000;
+    color:var(--text);
     font-size:18px;
 }
 
 .discussion-preview{
-    color:#666;
+    color:var(--text-muted);
     margin:10px 0;
     line-height:1.5;
 }
@@ -289,16 +292,16 @@ footer{
     display:flex;
     gap:15px;
     font-size:13px;
-    color:#999;
+    color:#888;
 }
 
 .author{
-    color:#333;
+    color:var(--text);
 }
 
 .replies{
     font-weight:bold;
-    color:#555;
+    color:#444;
 }
 
 /* ===== MODALS ===== */
@@ -316,15 +319,16 @@ footer{
 }
 
 .modal-content{
-    background-color:white;
+    background-color:#fff;
     margin:5% auto;
     padding:30px;
-    border:1px solid #888;
+    border:1px solid var(--border);
     border-radius:10px;
     width:90%;
     max-width:600px;
     max-height:80vh;
     overflow-y:auto;
+    color:var(--text);
 }
 
 .modal-large{
@@ -336,6 +340,29 @@ footer{
     justify-content:space-between;
     align-items:center;
     margin-bottom:20px;
+}
+
+.modal-header h3{
+    margin:0;
+    color:var(--text);
+}
+
+.close{
+    font-size:28px;
+    font-weight:bold;
+    cursor:pointer;
+    color:#111;
+}
+
+.close:hover{
+    color:#000;
+}
+
+.modal-buttons{
+    display:flex;
+    gap:10px;
+    justify-content:flex-end;
+    margin-top:20px;
 }
 
 .modal-header h3{
